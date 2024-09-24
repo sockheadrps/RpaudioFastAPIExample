@@ -14,6 +14,12 @@ pip install "fastapi[standard] rpaudio"
 ```
 
 ## Running the Application  
+Open main.py and point the AUDIO_FILE variable to some mp3, wav or flac on your computer.
+
+```py
+AUDIO_FILE = r"C:\Users\16145\Desktop\exc.mp3"
+```
+
 To start the server, run:  
 
 ```bash
