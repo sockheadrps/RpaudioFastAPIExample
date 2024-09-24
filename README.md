@@ -1,0 +1,28 @@
+# Example FastAPI App with rpaudio
+
+This is a simple example application that demonstrates how to control audio asynchronously using **FastAPI** and **rpaudio** over WebSockets. The audio is played in the Python process, but it is controlled over the network from a web client. The key feature is that the audio plays where the server is running, not in the browser.
+
+![client](webclient.gif)
+
+
+## Installation
+
+To install the required dependencies, run:
+
+```bash
+pip install "fastapi[standard] rpaudio"
+```
+
+## Running the Application  
+To start the server, run:  
+
+```bash
+uvicorn main:app --reload
+```
+
+## Web Client  
+The web client communicates with the FastAPI server via WebSockets to control audio playback.
+
+You can then access the application at:  
+
+http://127.0.0.1:8000/  

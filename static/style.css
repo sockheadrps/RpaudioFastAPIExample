@@ -1,0 +1,70 @@
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  padding: 50px;
+  background-color: #f4f4f4;
+}
+
+#player-container {
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  max-width: 600px; /* Optional: limit the width */
+  margin: auto; /* Center the container */
+}
+
+#controls {
+  margin-top: 20px;
+}
+
+button {
+  padding: 10px 20px;
+  font-size: 16px;
+  margin: 5px;
+  cursor: pointer;
+  border: none;
+  border-radius: 5px; /* Rounded corners */
+  background-color: #007bff; /* Primary button color */
+  color: white;
+  transition: background-color 0.3s ease; /* Smooth color transition */
+}
+
+button:hover {
+  background-color: #0056b3; /* Darker shade on hover */
+}
+
+#effects-container {
+  margin-top: 20px; /* Spacing above effects section */
+  display: flex; /* Use flexbox for layout */
+  flex-direction: column; /* Stack items vertically */
+  align-items: center; /* Center align the items */
+  gap: 15px; /* Space between each effect item */
+}
+
+.effect-item {
+  display: flex; /* Flexbox for input and label */
+  align-items: center; /* Center items vertically */
+  gap: 10px; /* Space between labels and inputs */
+  justify-content: center; /* Center content horizontally */
+}
+
+label {
+  margin-right: 5px; /* Spacing between label and input */
+  font-weight: normal; /* Normal weight for labels */
+  font-size: 14px; /* Smaller font size for labels */
+}
+
+input[type="number"] {
+  padding: 5px; /* Smaller padding for input */
+  width: 60px; /* Fixed width for inputs */
+  margin-left: 5px; /* Spacing to the left of the input */
+  border: 1px solid #ccc; /* Border around inputs */
+  border-radius: 5px; /* Rounded corners */
+  font-size: 14px; /* Smaller font size for inputs */
+}
+
+input[type="number"]:focus {
+  border-color: #007bff; /* Highlight border on focus */
+  outline: none; /* Remove default outline */
+}

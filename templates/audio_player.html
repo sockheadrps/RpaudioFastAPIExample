@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server-Side Audio Player</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div id="player-container">
+        <h1>Server-Side Audio Player</h1>
+        <div id="controls">
+            <button id="play-btn">Play</button>
+            <button id="pause-btn">Pause</button>
+            <button id="stop-btn">Stop</button>
+        </div>
+
+        <div id="effects-container">
+            <div class="effect-item">
+                <label for="fade-in-duration">Fade In:</label>
+                <input type="number" id="fade-in-duration" placeholder="sec" min="0" value="3.0" step="1.0">
+                <label for="fade-in-apply-after">Apply After:</label>
+                <input type="number" id="fade-in-apply-after" placeholder="sec" min="0" value="0.0" step="1.0">
+            </div>
+            <div class="effect-item">
+                <label for="fade-out-duration">Fade Out:</label>
+                <input type="number" id="fade-out-duration" placeholder="sec" min="0" value="3.0" step="1.0">
+                <label for="fade-out-apply-after">Apply After:</label>
+                <input type="number" id="fade-out-apply-after" placeholder="sec" min="0" value="10.0" step="1.0">
+            </div>
+            <div class="effect-item">
+                <label for="speed">Speed:</label>
+                <input type="number" id="speed" placeholder="x" min="0" step="0.1" value="1.5">
+                <label for="speed-duration">Duration:</label>
+                <input type="number" id="speed-duration" placeholder="sec" min="0" step="1.0" value="5.0">
+                <label for="speed-apply-after">Apply After:</label>
+                <input type="number" id="speed-apply-after" placeholder="sec" min="0" value="6.0" step="1.0">
+            </div>
+            
+            <button id="set-effects-btn">Set Effects</button>
+        </div>
+    </div>
+    <script src="/static/player.js"></script>
+</body>
+</html>
