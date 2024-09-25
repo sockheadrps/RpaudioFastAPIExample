@@ -23,12 +23,17 @@ AUDIO_FILE = r"C:\Users\16145\Desktop\exc.mp3"
 To start the server, run:  
 
 ```bash
-uvicorn main:app --reload
+python main.py
 ```
 
 ## Web Client  
 The web client communicates with the FastAPI server via WebSockets to control audio playback.
 
-You can then access the application at:  
+You can then access the application by connecting to your IP on any device that is on the same network as the server!
+e.g.
 
-http://127.0.0.1:8000/  
+```
+192.168.1.126:8000
+```
+
+In your browser on your phone, tablet or pc.

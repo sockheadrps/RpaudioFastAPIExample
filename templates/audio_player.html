@@ -18,27 +18,32 @@
         <div id="effects-container">
             <div class="effect-item">
                 <label for="fade-in-duration">Fade In:</label>
-                <input type="number" id="fade-in-duration" placeholder="sec" min="0" value="3.0" step="1.0">
+                <input type="number" id="fade-in-duration" placeholder="sec" min="0" value="3.0" step="1.0" class="effect-input">
                 <label for="fade-in-apply-after">Apply After:</label>
-                <input type="number" id="fade-in-apply-after" placeholder="sec" min="0" value="0.0" step="1.0">
+                <input type="number" id="fade-in-apply-after" placeholder="sec" min="0" value="0.0" step="1.0" class="effect-input">
+                <button class="lock-btn isLocked" data-locked="true"></button>
             </div>
             <div class="effect-item">
                 <label for="fade-out-duration">Fade Out:</label>
-                <input type="number" id="fade-out-duration" placeholder="sec" min="0" value="3.0" step="1.0">
+                <input type="number" id="fade-out-duration" placeholder="sec" min="0" value="3.0" step="1.0" class="effect-input">
                 <label for="fade-out-apply-after">Apply After:</label>
-                <input type="number" id="fade-out-apply-after" placeholder="sec" min="0" value="10.0" step="1.0">
+                <input type="number" id="fade-out-apply-after" placeholder="sec" min="0" value="8.0" step="1.0" class="effect-input">
+                <button class="lock-btn isLocked" data-locked="true"></button>
             </div>
             <div class="effect-item">
                 <label for="speed">Speed:</label>
-                <input type="number" id="speed" placeholder="x" min="0" step="0.1" value="1.5">
+                <input type="number" id="speed" placeholder="x" min="0" step="0.1" value="1.5" class="effect-input">
                 <label for="speed-duration">Duration:</label>
-                <input type="number" id="speed-duration" placeholder="sec" min="0" step="1.0" value="5.0">
+                <input type="number" id="speed-duration" placeholder="sec" min="0" step="1.0" value="4.0" class="effect-input">
                 <label for="speed-apply-after">Apply After:</label>
-                <input type="number" id="speed-apply-after" placeholder="sec" min="0" value="6.0" step="1.0">
+                <input type="number" id="speed-apply-after" placeholder="sec" min="0" value="3.0" step="1.0" class="effect-input">
+                <button class="lock-btn isLocked" data-locked="true"></button>
             </div>
             
             <button id="set-effects-btn">Set Effects</button>
         </div>
+        
+        
     </div>
     <script src="/static/player.js"></script>
 </body>

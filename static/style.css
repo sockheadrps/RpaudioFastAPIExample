@@ -1,17 +1,19 @@
 body {
   font-family: Arial, sans-serif;
   text-align: center;
-  padding: 50px;
-  background-color: #f4f4f4;
+  padding-top: 50px;
+  padding-bottom: 50px;
+  background-color: #121212;
+  color: #ffffff;
+  touch-action: auto;
 }
 
 #player-container {
-  background: #fff;
+  background: #1e1e1e;
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  max-width: 600px; /* Optional: limit the width */
-  margin: auto; /* Center the container */
+  margin: auto;
 }
 
 #controls {
@@ -24,47 +26,65 @@ button {
   margin: 5px;
   cursor: pointer;
   border: none;
-  border-radius: 5px; /* Rounded corners */
-  background-color: #007bff; /* Primary button color */
+  border-radius: 5px;
+  background-color: #007bff;
   color: white;
-  transition: background-color 0.3s ease; /* Smooth color transition */
+  transition: background-color 0.3s ease;
+  touch-action: manipulation;
 }
 
 button:hover {
-  background-color: #0056b3; /* Darker shade on hover */
+  background-color: #0056b3;
 }
 
 #effects-container {
-  margin-top: 20px; /* Spacing above effects section */
-  display: flex; /* Use flexbox for layout */
-  flex-direction: column; /* Stack items vertically */
-  align-items: center; /* Center align the items */
-  gap: 15px; /* Space between each effect item */
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
 }
 
 .effect-item {
-  display: flex; /* Flexbox for input and label */
-  align-items: center; /* Center items vertically */
-  gap: 10px; /* Space between labels and inputs */
-  justify-content: center; /* Center content horizontally */
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  justify-content: center;
 }
 
 label {
-  margin-right: 5px; /* Spacing between label and input */
-  font-weight: normal; /* Normal weight for labels */
-  font-size: 14px; /* Smaller font size for labels */
+  font-weight: normal;
+  font-size: 14px;
+  color: #ffffff;
+  width: 80px;
 }
 
-input[type="number"] {
-  padding: 5px; /* Smaller padding for input */
-  width: 60px; /* Fixed width for inputs */
-  margin-left: 5px; /* Spacing to the left of the input */
-  border: 1px solid #ccc; /* Border around inputs */
-  border-radius: 5px; /* Rounded corners */
-  font-size: 14px; /* Smaller font size for inputs */
+input[type='number'] {
+  padding: 5px;
+  width: 40px;
+  margin-left: 5px;
+  border: 1px solid #444;
+  border-radius: 5px;
+  font-size: 14px;
+  background-color: #2a2a2a;
+  color: #ffffff;
 }
 
-input[type="number"]:focus {
-  border-color: #007bff; /* Highlight border on focus */
-  outline: none; /* Remove default outline */
+input[type='number']:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+input[type='number']:disabled {
+  background-color: #3a3a3a;
+  color: #6c757d;
+}
+
+.lock-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #15548b;
+  touch-action: auto;
 }

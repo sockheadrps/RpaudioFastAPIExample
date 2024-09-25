@@ -1,4 +1,10 @@
-const socket = new WebSocket('ws://localhost:8000/ws/audio');
+const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+const host = window.location.hostname;
+const port = '8000'; // Specify the port you're using for the WebSocket server
+
+const socket = new WebSocket(
+  `${protocol}://${host}:${port}/ws/audio`
+);
 
 socket.onopen = function () {
   console.log('WebSocket connection established.');
@@ -8,44 +14,127 @@ socket.onmessage = function (event) {
   console.log('Message from server: ' + event.data);
 };
 
-// Function to set audio effects and play
-function setEffectsAndPlay() {
-  const fadeIn =
-    parseFloat(document.getElementById('fade-in').value) || 0;
-  const fadeOut =
-    parseFloat(document.getElementById('fade-out').value) || 0;
-  const speed =
-    parseFloat(document.getElementById('speed').value) || 1.0;
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.lock-btn').forEach((button) => {
+    button.textContent = '🔓';
+    button.dataset.locked = 'false';
+  });
 
-  // Send the effects settings to the server
+  const inputs = document.querySelectorAll('input');
+  inputs.forEach((input) => {
+    input.disabled = false;
+    input.style.opacity = '1';
+  });
+});
+
+const effectLocks = {
+  fadeIn: true,
+  fadeOut: true,
+  speed: true,
+};
+
+document.querySelectorAll('.lock-btn').forEach((button) => {
+  button.addEventListener('click', toggleLock);
+  button.addEventListener('touchend', (event) => {
+    event.preventDefault();
+    toggleLock.call(button);
+  });
+});
+
+function toggleLock() {
+  const inputs = this.parentElement.querySelectorAll('input');
+  const isLocked = this.dataset.locked === 'true';
+
+  if (isLocked) {
+    inputs.forEach((input) => {
+      input.disabled = false;
+      input.style.opacity = '1';
+    });
+    this.textContent = '🔓';
+    this.dataset.locked = 'false';
+    effectLocks[
+      this.parentElement.querySelector('label').htmlFor
+    ] = false;
+  } else {
+    inputs.forEach((input) => {
+      input.disabled = true;
+      input.style.opacity = '0.5';
+    });
+    this.textContent = '🔒';
+    this.dataset.locked = 'true';
+    effectLocks[
+      this.parentElement.querySelector('label').htmlFor
+    ] = true;
+  }
+}
+
+function setEffects() {
+  const fadeInInput = document.getElementById('fade-in-duration');
+  const fadeInApplyAfterInput = document.getElementById(
+    'fade-in-apply-after'
+  );
+  const fadeOutInput = document.getElementById('fade-out-duration');
+  const fadeOutApplyAfterInput = document.getElementById(
+    'fade-out-apply-after'
+  );
+  const speedInput = document.getElementById('speed');
+  const speedDurationInput =
+    document.getElementById('speed-duration');
+  const speedApplyAfterInput = document.getElementById(
+    'speed-apply-after'
+  );
+
   const effectsData = {
     event: 'effects',
-    data: {
-      fadeIn: fadeIn,
-      fadeOut: fadeOut,
-      speed: speed,
-    },
+    data: {},
   };
 
-  socket.send(JSON.stringify(effectsData));
+  if (!fadeInInput.disabled && fadeInInput.value) {
+    const fadeIn = parseFloat(fadeInInput.value);
+    const fadeInApplyAfter =
+      parseFloat(fadeInApplyAfterInput.value) || 0;
+    effectsData.data.fadeInDuration = fadeIn;
+    effectsData.data.fadeInApplyAfter = fadeInApplyAfter;
+  }
 
-  // Disable the effects input fields
+  if (!fadeOutInput.disabled && fadeOutInput.value) {
+    const fadeOut = parseFloat(fadeOutInput.value);
+    const fadeOutApplyAfter =
+      parseFloat(fadeOutApplyAfterInput.value) || 0;
+    effectsData.data.fadeOutDuration = fadeOut;
+    effectsData.data.fadeOutApplyAfter = fadeOutApplyAfter;
+  }
+
+  if (!speedInput.disabled && speedInput.value) {
+    const speed = parseFloat(speedInput.value) || 1.0;
+    const speedDuration = parseFloat(speedDurationInput.value) || 0;
+    const speedApplyAfter =
+      parseFloat(speedApplyAfterInput.value) || 0;
+    effectsData.data.speed = speed;
+    effectsData.data.speedDuration = speedDuration;
+    effectsData.data.speedApplyAfter = speedApplyAfter;
+  }
+
+  if (Object.keys(effectsData.data).length > 0) {
+    socket.send(JSON.stringify(effectsData));
+  }
+
   document
-    .getElementById('effects-form')
-    .querySelectorAll('input')
+    .querySelectorAll('#effects-container input')
     .forEach((input) => {
       input.disabled = true;
     });
 }
 
-// Event listeners for buttons
-document.getElementById('play-btn').addEventListener('click', () => {
-  const playData = {
-    event: 'audio_control',
-    data: 'play',
-  };
-  socket.send(JSON.stringify(playData));
-});
+document
+  .getElementById('set-effects-btn')
+  .addEventListener('click', setEffects);
+document
+  .getElementById('set-effects-btn')
+  .addEventListener('touchend', (event) => {
+    event.preventDefault();
+    setEffects();
+  });
 
 document.getElementById('pause-btn').addEventListener('click', () => {
   const pauseData = {
@@ -54,6 +143,34 @@ document.getElementById('pause-btn').addEventListener('click', () => {
   };
   socket.send(JSON.stringify(pauseData));
 });
+document
+  .getElementById('pause-btn')
+  .addEventListener('touchstart', (event) => {
+    event.preventDefault();
+    const pauseData = {
+      event: 'audio_control',
+      data: 'pause',
+    };
+    socket.send(JSON.stringify(pauseData));
+  });
+
+document.getElementById('play-btn').addEventListener('click', () => {
+  const playData = {
+    event: 'audio_control',
+    data: 'play',
+  };
+  socket.send(JSON.stringify(playData));
+});
+document
+  .getElementById('play-btn')
+  .addEventListener('touchstart', (event) => {
+    event.preventDefault();
+    const playData = {
+      event: 'audio_control',
+      data: 'play',
+    };
+    socket.send(JSON.stringify(playData));
+  });
 
 document.getElementById('stop-btn').addEventListener('click', () => {
   const stopData = {
@@ -62,52 +179,13 @@ document.getElementById('stop-btn').addEventListener('click', () => {
   };
   socket.send(JSON.stringify(stopData));
 });
-
-// Event listener for the set effects button
 document
-  .getElementById('set-effects-btn')
-  .addEventListener('click', function () {
-    const fadeInDuration = document.getElementById(
-      'fade-in-duration'
-    ).value;
-    const fadeInApplyAfter = document.getElementById(
-      'fade-in-apply-after'
-    ).value;
-    const fadeOutDuration = document.getElementById(
-      'fade-out-duration'
-    ).value;
-    const fadeOutApplyAfter = document.getElementById(
-      'fade-out-apply-after'
-    ).value;
-    const speed = document.getElementById('speed').value;
-    const speedDuration = document.getElementById('speed-duration').value; // New line for speed duration
-    const speedApplyAfter = document.getElementById(
-      'speed-apply-after'
-    ).value;
-
-    // Send the effects settings to the server
-    const effectsData = {
-      event: 'effects',
-      data: {
-        fadeInDuration: parseFloat(fadeInDuration),
-        fadeInApplyAfter: parseFloat(fadeInApplyAfter),
-        fadeOutDuration: parseFloat(fadeOutDuration),
-        fadeOutApplyAfter: parseFloat(fadeOutApplyAfter),
-        speed: parseFloat(speed),
-        speedDuration: parseFloat(speedDuration), // Include speed duration in data
-        speedApplyAfter: parseFloat(speedApplyAfter),
-      },
+  .getElementById('stop-btn')
+  .addEventListener('touchstart', (event) => {
+    event.preventDefault();
+    const stopData = {
+      event: 'audio_control',
+      data: 'stop',
     };
-
-    socket.send(JSON.stringify(effectsData));
-
-    // Disable the input fields
-    document
-      .querySelectorAll('#effects-container input')
-      .forEach((input) => {
-        input.disabled = true;
-      });
-
-    // Disable the Set Effects button
-    this.disabled = true;
+    socket.send(JSON.stringify(stopData));
   });

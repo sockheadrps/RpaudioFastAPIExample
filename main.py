@@ -5,6 +5,7 @@ import asyncio
 import rpaudio
 from rpaudio import FadeIn, FadeOut, ChangeSpeed
 import json
+import uvicorn
 
 app = FastAPI()
 
@@ -36,10 +37,12 @@ async def audio_command_processor():
     """Loop that processes commands from the queue."""
     global audio_handler, kill_audio
     kill_audio = False
-    audio_handler = rpaudio.AudioSink(callback=on_audio_stop).load_audio(AUDIO_FILE)
+    audio_handler = rpaudio.AudioSink(
+        callback=on_audio_stop).load_audio(AUDIO_FILE)
     audio_handler.set_volume(0.0)
-
-
+    audio_handler.try_seek(148.0)
+    await asyncio.sleep(0.5)
+    current_pos = audio_handler.get_pos()
 
     while not kill_audio:
         await asyncio.sleep(0.2)
@@ -60,44 +63,49 @@ async def audio_command_processor():
                 kill_audio = True
 
         elif command["type"] == "set_effects":
-          fade_in_duration = command["effects"]["fadeIn"]["duration"]
-          fade_in_apply_after = command["effects"]["fadeIn"]["applyAfter"]
-          fade_out_duration = command["effects"]["fadeOut"]["duration"]
-          fade_out_apply_after = command["effects"]["fadeOut"]["applyAfter"]
-          speed_value = command["effects"]["speed"]["value"]
-          speed_duration = command["effects"]["speed"]["duration"]
-          speed_apply_after = command["effects"]["speed"]["applyAfter"]
 
-          fade_in_duration = float(fade_in_duration)
-          fade_in_apply_after = float(fade_in_apply_after)
-          fade_out_duration = float(fade_out_duration)
-          fade_out_apply_after = float(fade_out_apply_after)
-          speed_value = float(speed_value)
-          speed_duration = float(speed_duration)
-          speed_apply_after = float(speed_apply_after)
+            effects_list = []
 
-          fade_in_effect = FadeIn(duration=fade_in_duration, apply_after=fade_in_apply_after)
-          fade_out_effect = FadeOut(duration=fade_out_duration, apply_after=fade_out_apply_after, start_val=1.0, end_val=0.0)
-          speed_up = ChangeSpeed(end_val=speed_value, duration=speed_duration, apply_after=speed_apply_after)
+            # Handle fade in effect if it exists
+            if "fadeIn" in command["effects"]:
+                fade_in_duration = float(
+                    command["effects"]["fadeIn"]["duration"])
+                fade_in_apply_after = float(
+                    command["effects"]["fadeIn"]["applyAfter"])
+                fade_in_effect = FadeIn(
+                    duration=fade_in_duration, apply_after=fade_in_apply_after)
+                effects_list.append(fade_in_effect)
 
-          print(f"fadein value: {fade_in_duration}, fadein apply after: {fade_in_apply_after}")
-          print(f"fadeout value: {fade_out_duration}, fadeout apply after: {fade_out_apply_after}")
-          print(f"speed value: {speed_value}, speed apply after: {speed_apply_after}, speed duration: {speed_duration}")
+            # Handle fade out effect if it exists
+            if "fadeOut" in command["effects"]:
+                fade_out_duration = float(
+                    command["effects"]["fadeOut"]["duration"])
+                fade_out_apply_after = float(
+                    command["effects"]["fadeOut"]["applyAfter"])
+                fade_out_effect = FadeOut(
+                    duration=fade_out_duration, apply_after=fade_out_apply_after)
+                effects_list.append(fade_out_effect)
 
-          effects_list = [fade_in_effect, speed_up ,fade_out_effect]
-          audio_handler.apply_effects(effects_list)
+            # Handle speed effect if it exists
+            if "speed" in command["effects"]:
+                speed_value = float(command["effects"]["speed"]["value"])
+                speed_duration = float(command["effects"]["speed"]["duration"])
+                speed_apply_after = float(
+                    command["effects"]["speed"]["applyAfter"])
+                speed_up = ChangeSpeed(
+                    end_val=speed_value, duration=speed_duration, apply_after=speed_apply_after)
+                effects_list.append(speed_up)
 
-    # Mark the command as done
+            # Apply effects only if any are present
+            if effects_list:
+                audio_handler.apply_effects(effects_list)
+                print(
+                    f"Applied effects after: {[effect.apply_after for effect in effects_list]}")
+
     print("Command processed. Ending the audio command processor loop.")
     command_queue.task_done()
 
 
-@app.on_event("startup")
-async def startup_event():
-    """Start the audio command processor loop on startup."""
-    asyncio.create_task(audio_command_processor())
-
-# Serve the HTML for the audio player
 @app.get("/", response_class=HTMLResponse)
 async def get_audio_player():
     return HTMLResponse(content=open("templates/audio_player.html").read())
@@ -108,11 +116,15 @@ async def websocket_endpoint(websocket: WebSocket):
     global kill_audio, audio_handler
     await websocket.accept()
     clients.append(websocket)
+
+    # Create the audio command processor task on connect
+    audio_processor_task = asyncio.create_task(audio_command_processor())
+
     try:
         while True:
             # Receive commands from the client
             data = await websocket.receive_text()
-            print(f"Received data: {data}") 
+            print(f"Received data: {data}")
 
             if data.strip():
                 try:
@@ -122,40 +134,42 @@ async def websocket_endpoint(websocket: WebSocket):
                     continue
 
                 event_type = data_json.get('event')
-                # Updated effects handling in the websocket_endpoint
+
                 if event_type == "effects":
-                  # Directly access the 'data' key to get effect values
-                  effects_data = data_json.get('data', {})
-                  
-                  # Get the effect values from the effects_data
-                  fade_in_duration = effects_data.get('fadeInDuration')
-                  fade_in_apply_after = effects_data.get('fadeInApplyAfter')
-                  fade_out_duration = effects_data.get('fadeOutDuration')
-                  fade_out_apply_after = effects_data.get('fadeOutApplyAfter')
-                  speed = effects_data.get('speed')
-                  speed_duration = effects_data.get('speedDuration')
-                  speed_apply_after = effects_data.get('speedApplyAfter')
+                    # Directly access the 'data' key to get effect values
+                    effects_data = data_json.get('data', {})
 
-                  # Send effects settings to the command queue
-                  command_queue.put_nowait({
-                      "type": "set_effects",
-                      "effects": {
-                          "fadeIn": {
-                              "duration": fade_in_duration,
-                              "applyAfter": fade_in_apply_after
-                          },
-                          "fadeOut": {
-                              "duration": fade_out_duration,
-                              "applyAfter": fade_out_apply_after
-                          },
-                          "speed": {
-                              "value": speed,
-                              "duration": speed_duration,
-                              "applyAfter": speed_apply_after
-                          }
-                      }
-                  })
+                    # Create effects dictionary
+                    effects = {}
 
+                    # Add fadeIn settings if present
+                    if 'fadeInDuration' in effects_data or 'fadeInApplyAfter' in effects_data:
+                        effects['fadeIn'] = {
+                            "duration": effects_data.get('fadeInDuration'),
+                            "applyAfter": effects_data.get('fadeInApplyAfter')
+                        }
+
+                    # Add fadeOut settings if present
+                    if 'fadeOutDuration' in effects_data or 'fadeOutApplyAfter' in effects_data:
+                        effects['fadeOut'] = {
+                            "duration": effects_data.get('fadeOutDuration'),
+                            "applyAfter": effects_data.get('fadeOutApplyAfter')
+                        }
+
+                    # Add speed settings if present
+                    if 'speed' in effects_data or 'speedDuration' in effects_data or 'speedApplyAfter' in effects_data:
+                        effects['speed'] = {
+                            "value": effects_data.get('speed'),
+                            "duration": effects_data.get('speedDuration'),
+                            "applyAfter": effects_data.get('speedApplyAfter')
+                        }
+
+                    # Send effects settings to the command queue if there are any effects
+                    if effects:
+                        command_queue.put_nowait({
+                            "type": "set_effects",
+                            "effects": effects
+                        })
 
                 elif event_type == "audio_control":
                     command = data_json.get('data')
@@ -177,5 +191,10 @@ async def websocket_endpoint(websocket: WebSocket):
                         await client.send_text(f"Audio state updated: {event_type}")
 
     except WebSocketDisconnect:
+        # On disconnect, cancel the audio command processor task
+        audio_processor_task.cancel()
         clients.remove(websocket)
         await websocket.close()
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
