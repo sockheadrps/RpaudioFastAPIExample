@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 import asyncio
 import rpaudio
-from rpaudio import FadeIn, FadeOut, ChangeSpeed
+from rpaudio import FadeIn, FadeOut, ChangeSpeed, AudioChannel
 import json
 import uvicorn
 
@@ -13,54 +13,88 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.mount("/templates", StaticFiles(directory="templates"), name="templates")
 
-# Global variables
-AUDIO_FILE = r"C:\Users\16145\Desktop\exc.mp3"
-audio_handler = None
-kill_audio = False
 
 # Queue for handling audio commands
 command_queue = asyncio.Queue()
+client_queue = asyncio.Queue()
 
 # WebSocket clients
 clients = []
 
-# Callback when the audio stops
+
+async def client_queue_processor():
+    while True:
+        await asyncio.sleep(0.2)
+        if not client_queue.empty():
+            audio_status = client_queue.get_nowait()
+            data = {"data": audio_status}
+            if len(clients) > 0:
+                await clients[0].send_json(data)
 
 
 def on_audio_stop():
-    global kill_audio
-    kill_audio = True
+    command_queue.put_nowait({"type": "complete"})
     print("Audio has stopped")
 
 
 async def audio_command_processor():
-    """Loop that processes commands from the queue."""
-    global audio_handler, kill_audio
-    kill_audio = False
-    audio_handler = rpaudio.AudioSink(
-        callback=on_audio_stop).load_audio(AUDIO_FILE)
-    audio_handler.set_volume(0.0)
-    audio_handler.try_seek(148.0)
-    await asyncio.sleep(0.5)
-    current_pos = audio_handler.get_pos()
+    AUDIO_FILE = r"C:\Users\16145\Desktop\a1.mp3"
+    AUDIO_FILE_2 = r"C:\Users\16145\Desktop\a2.mp3"
+    audio_1 = rpaudio.AudioSink(callback=on_audio_stop).load_audio(AUDIO_FILE)
+    audio_2 = rpaudio.AudioSink(
+        callback=on_audio_stop).load_audio(AUDIO_FILE_2)
+    channel = AudioChannel()
+    channel.push(audio_1)
+    channel.push(audio_2)
+    audio_status = {
+        "is_playing": False,
+        "title": None,
+        "artist": None,
+        "duration": None,
 
-    while not kill_audio:
-        await asyncio.sleep(0.2)
+    }
+    client_queue.put_nowait(audio_status)
+
+    await asyncio.sleep(0.5)
+
+    while True:
+
+        await asyncio.sleep(0.4)
 
         command = await command_queue.get()
+        print(f"Processing command: {command}")
 
         if command["type"] == "play":
-            if not audio_handler.is_playing:
-                audio_handler.play()
+            while channel.current_audio is None:
+                await asyncio.sleep(0.1)
+            channel.current_audio.play()
+            while not channel.current_audio.is_playing:
+                await asyncio.sleep(0.1)
+            audio_status["is_playing"] = True
 
         elif command["type"] == "pause":
-            if audio_handler:
-                audio_handler.pause()
+            while channel.current_audio is None:
+                await asyncio.sleep(0.1)
+            
+            channel.current_audio.pause()
+            while channel.current_audio.is_playing:
+                await asyncio.sleep(0.1)
+
+            audio_status["is_playing"] = False
 
         elif command["type"] == "stop":
-            if audio_handler:
-                audio_handler.stop()
-                kill_audio = True
+            if channel.current_audio:
+                channel.current_audio.stop()
+                audio_status = {
+                    "is_playing": False,
+                    "title": None,
+                    "duration": None,
+
+                }
+
+        elif command["type"] == "autoplay_on":
+            print("Auto play command received.")
+            channel.auto_consume = True
 
         elif command["type"] == "set_effects":
 
@@ -98,12 +132,23 @@ async def audio_command_processor():
 
             # Apply effects only if any are present
             if effects_list:
-                audio_handler.apply_effects(effects_list)
+                channel.set_effects_chain(effects_list)
+                await asyncio.sleep(0.3)
+
                 print(
                     f"Applied effects after: {[effect.apply_after for effect in effects_list]}")
+        # await asyncio.sleep(0.3)
+        print(f"channel.current_audio: {channel.current_audio}")
 
-    print("Command processed. Ending the audio command processor loop.")
-    command_queue.task_done()
+        if not command.get("effects"):
+            while channel.current_audio is None:
+                await asyncio.sleep(0.1)
+                print("Waiting for audio to load...")
+            audio_status["title"] = channel.current_audio.metadata['title']
+            audio_status["duration"] = channel.current_audio.metadata['duration']
+            audio_status["artist"] = channel.current_audio.metadata['artist']
+            print(f"Audio status: {audio_status}")
+            client_queue.put_nowait(audio_status)
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -113,15 +158,16 @@ async def get_audio_player():
 
 @app.websocket("/ws/audio")
 async def websocket_endpoint(websocket: WebSocket):
-    global kill_audio, audio_handler
     await websocket.accept()
     clients.append(websocket)
 
     # Create the audio command processor task on connect
     audio_processor_task = asyncio.create_task(audio_command_processor())
+    client_processor_task = asyncio.create_task(client_queue_processor())
 
     try:
         while True:
+            await asyncio.sleep(0.1)
             # Receive commands from the client
             data = await websocket.receive_text()
             print(f"Received data: {data}")
@@ -185,6 +231,10 @@ async def websocket_endpoint(websocket: WebSocket):
                         command_queue.put_nowait({"type": "stop"})
                         await websocket.send_text("Stop command queued.")
 
+                    elif command == "autoplay_on":
+                        command_queue.put_nowait({"type": "autoplay_on"})
+                        await websocket.send_text("Auto play command queued.")
+
                 # Broadcast updates or audio state to all connected clients
                 for client in clients:
                     if client != websocket:
@@ -193,6 +243,7 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         # On disconnect, cancel the audio command processor task
         audio_processor_task.cancel()
+        client_processor_task.cancel()
         clients.remove(websocket)
         await websocket.close()
 
