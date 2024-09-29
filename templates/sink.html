@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server-Side Audio Player</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div id="player-container">
+        <h1>Server-Side AudioSink</h1>
+        <div id="controls">
+            <button id="play-btn">Play</button>
+            <button id="pause-btn">Pause</button>
+            <button id="stop-btn">Stop</button>
+            
+            <div id="volume-control">
+                <label for="volume-slider">Volume: </label>
+                <input type="range" id="volume-slider" class="slider" min="0" max="1" step="0.05" value="1.0">
+                <span id="volume-value">1.0</span>
+            </div>
+
+            <div id="speed-control">
+                <label for="speed-slider">Speed: </label>
+                <input type="range" id="speed-slider" class="slider" min="0.5" max="2" step="0.1" value="1">
+                <span id="speed-value">1.0</span>
+            </div>
+        </div>
+        
+        <div id="track-info" style="display: none;">
+            <h2 id="track-title"></h2>
+            <h3 id="track-artist"></h3>
+            <p id="track-duration"></p>
+            <p id="track-speed"></p>
+            <p id="track-position"></p>
+            <p id="track-volume"></p>
+        </div>
+    </div>
+    <script src="/static/sink.js"></script>
+</body>
+</html>
