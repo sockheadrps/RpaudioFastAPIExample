@@ -12,6 +12,35 @@ socket.onopen = function () {
 
 socket.onmessage = function (event) {
   console.log('Message from server: ' + event.data);
+
+  // Parse the incoming JSON data
+  const message = JSON.parse(event.data);
+
+  // Check if the message contains data with track information
+  if (
+    message.data &&
+    message.data.title &&
+    message.data.artist &&
+    message.data.duration
+  ) {
+    // Update the track info display
+    document.getElementById(
+      'track-title'
+    ).textContent = `Title: ${message.data.title}`;
+    document.getElementById(
+      'track-artist'
+    ).textContent = `Artist: ${message.data.artist}`;
+    document.getElementById(
+      'track-duration'
+    ).textContent = `Duration: ${message.data.duration}`;
+
+    // Show the track info section
+    document.getElementById('track-info').style.display = 'block';
+
+    // Hide the effects container if it's visible
+    document.getElementById('effects-container').style.display =
+      'none';
+  }
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -119,11 +148,15 @@ function setEffects() {
     socket.send(JSON.stringify(effectsData));
   }
 
+  // Disable the inputs after setting effects
   document
     .querySelectorAll('#effects-container input')
     .forEach((input) => {
       input.disabled = true;
     });
+
+  // Hide the effects container
+  document.getElementById('effects-container').style.display = 'none';
 }
 
 document
@@ -188,4 +221,28 @@ document
       data: 'stop',
     };
     socket.send(JSON.stringify(stopData));
+  });
+
+let isAutoplay = false;
+
+document
+  .getElementById('autoplay-btn')
+  .addEventListener('click', () => {
+    isAutoplay = !isAutoplay;
+
+    const autoplayBtn = document.getElementById('autoplay-btn');
+    if (isAutoplay) {
+      autoplayBtn.textContent = 'Autoplay: On';
+      autoplayBtn.dataset.autoplay = 'true';
+    } else {
+      autoplayBtn.textContent = 'Autoplay: Off';
+      autoplayBtn.dataset.autoplay = 'false';
+    }
+
+    // Send autoplay state to the server via WebSocket
+    const autoplayData = {
+      event: 'audio_control',
+      data: isAutoplay ? 'autoplay_on' : 'autoplay_off',
+    };
+    socket.send(JSON.stringify(autoplayData));
   });

@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 import asyncio
 import rpaudio
-from rpaudio import FadeIn, FadeOut, ChangeSpeed
+from rpaudio import FadeIn, FadeOut, ChangeSpeed, AudioChannel
 import json
 import uvicorn
 
@@ -12,54 +12,12 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.mount("/templates", StaticFiles(directory="templates"), name="templates")
 
-# Global variables
-AUDIO_FILE = r"C:\Users\16145\Desktop\exc.mp3"
-audio_handler = None
-kill_audio = False
 
 command_queue = asyncio.Queue()
+client_queue = asyncio.Queue()
 
 clients = []
 
-<<<<<<< Updated upstream
-# Callback when the audio stops
-
-
-def on_audio_stop():
-    global kill_audio
-    kill_audio = True
-    print("Audio has stopped")
-
-
-async def audio_command_processor():
-    """Loop that processes commands from the queue."""
-    global audio_handler, kill_audio
-    kill_audio = False
-    audio_handler = rpaudio.AudioSink(
-        callback=on_audio_stop).load_audio(AUDIO_FILE)
-    audio_handler.set_volume(0.0)
-    audio_handler.try_seek(148.0)
-    await asyncio.sleep(0.5)
-    current_pos = audio_handler.get_pos()
-
-    while not kill_audio:
-        await asyncio.sleep(0.2)
-
-        command = await command_queue.get()
-
-        if command["type"] == "play":
-            if not audio_handler.is_playing:
-                audio_handler.play()
-
-        elif command["type"] == "pause":
-            if audio_handler:
-                audio_handler.pause()
-
-        elif command["type"] == "stop":
-            if audio_handler:
-                audio_handler.stop()
-                kill_audio = True
-=======
 
 async def client_queue_processor():
     while True:
@@ -175,7 +133,6 @@ async def audio_command_processor(endpoint):
                     fade_in_effect = FadeIn(
                         duration=fade_in_duration, apply_after=fade_in_apply_after)
                     effects_list.append(fade_in_effect)
->>>>>>> Stashed changes
 
                 if "fadeOut" in command["effects"]:
                     fade_out_duration = float(
@@ -211,31 +168,10 @@ async def audio_command_processor(endpoint):
                 else:
                     pass
 
-<<<<<<< Updated upstream
-            # Handle speed effect if it exists
-            if "speed" in command["effects"]:
-                speed_value = float(command["effects"]["speed"]["value"])
-                speed_duration = float(command["effects"]["speed"]["duration"])
-                speed_apply_after = float(
-                    command["effects"]["speed"]["applyAfter"])
-                speed_up = ChangeSpeed(
-                    end_val=speed_value, duration=speed_duration, apply_after=speed_apply_after)
-                effects_list.append(speed_up)
-
-            # Apply effects only if any are present
-            if effects_list:
-                audio_handler.apply_effects(effects_list)
-                print(
-                    f"Applied effects after: {[effect.apply_after for effect in effects_list]}")
-
-    print("Command processed. Ending the audio command processor loop.")
-    command_queue.task_done()
-=======
         if command:
             print(f"Command processed: {command}")
             client_queue.put_nowait(audio_status)
             command = None
->>>>>>> Stashed changes
 
 
 @app.get("/audio_channels", response_class=HTMLResponse)
@@ -250,19 +186,10 @@ async def get_audio_player():
 
 @app.websocket("/ws/audio")
 async def websocket_endpoint(websocket: WebSocket):
-    global kill_audio, audio_handler
     await websocket.accept()
     clients.append(websocket)
     data = await websocket.receive_text()
 
-<<<<<<< Updated upstream
-    # Create the audio command processor task on connect
-    audio_processor_task = asyncio.create_task(audio_command_processor())
-
-    try:
-        while True:
-            # Receive commands from the client
-=======
     if data.strip():
         try:
             data_json = json.loads(data)
@@ -279,7 +206,6 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         while True:
             await asyncio.sleep(0.2)
->>>>>>> Stashed changes
             data = await websocket.receive_text()
 
             if data.strip():
@@ -336,9 +262,6 @@ async def websocket_endpoint(websocket: WebSocket):
                         command_queue.put_nowait({"type": "stop"})
                         await websocket.send_text("Stop command queued.")
 
-<<<<<<< Updated upstream
-                # Broadcast updates or audio state to all connected clients
-=======
                     elif command == "autoplay_on":
                         command_queue.put_nowait({"type": "autoplay_on"})
                         await websocket.send_text("Auto play command queued.")
@@ -361,13 +284,13 @@ async def websocket_endpoint(websocket: WebSocket):
                                 "speed": {"value": speed}
                             })
 
->>>>>>> Stashed changes
                 for client in clients:
                     if client != websocket:
                         await client.send_text(f"Audio state updated: {event_type}")
 
     except WebSocketDisconnect:
         audio_processor_task.cancel()
+        client_processor_task.cancel()
         clients.remove(websocket)
         await websocket.close()
 
