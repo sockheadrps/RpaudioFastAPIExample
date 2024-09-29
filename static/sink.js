@@ -36,19 +36,16 @@ function handleMessage(message) {
       'track-artist'
     ).textContent = `Artist: ${message.data.artist}`;
 
-    // Limit to 2 decimals using toFixed()
-    const duration = message.data.duration
-      ? message.data.duration.toFixed(2)
-      : '';
-    const speed = message.data.speed
-      ? message.data.speed.toFixed(2)
-      : '';
-    const position = message.data.position
-      ? message.data.position.toFixed(2)
-      : '';
-    const volume = message.data.volume
-      ? message.data.volume.toFixed(2)
-      : '';
+    // Helper function to format values
+    const formatValue = (value) => {
+      const numValue = parseFloat(value); // Convert to number
+      return !isNaN(numValue) ? numValue.toFixed(2) : ''; // Limit to 2 decimals or return an empty string
+    };
+
+    const duration = formatValue(message.data.duration);
+    const speed = formatValue(message.data.speed);
+    const position = formatValue(message.data.position);
+    const volume = formatValue(message.data.volume);
 
     document.getElementById(
       'track-duration'
@@ -69,7 +66,7 @@ function handleMessage(message) {
 
 document
   .getElementById('volume-slider')
-  .addEventListener('mouseup', function () {
+  .addEventListener('input', function () {
     const volumeValue = parseFloat(this.value).toFixed(2);
     document.getElementById('volume-value').textContent = volumeValue;
 

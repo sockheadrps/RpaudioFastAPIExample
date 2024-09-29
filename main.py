@@ -288,11 +288,11 @@ async def websocket_endpoint(websocket: WebSocket):
                     if client != websocket:
                         await client.send_text(f"Audio state updated: {event_type}")
 
-    except WebSocketDisconnect:
+    except (WebSocketDisconnect, RuntimeError):
         audio_processor_task.cancel()
         client_processor_task.cancel()
         clients.remove(websocket)
-        await websocket.close()
+    
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

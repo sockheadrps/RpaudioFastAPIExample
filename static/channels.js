@@ -28,39 +28,19 @@ function handleMessage(message) {
   console.log('Processing message:', message);
 
   if (message.data && message.data.title) {
-    document.getElementById(
-      'track-title'
-    ).textContent = `Title: ${message.data.title}`;
-    document.getElementById(
-      'track-artist'
-    ).textContent = `Artist: ${message.data.artist}`;
-
+    document.getElementById('track-title').textContent = `Title: ${message.data.title}`;
+    document.getElementById('track-artist').textContent = `Artist: ${message.data.artist}`;
+    
     // Limit to 2 decimals using toFixed()
-    const duration = message.data.duration
-      ? message.data.duration.toFixed(2)
-      : '';
-    const speed = message.data.speed
-      ? message.data.speed.toFixed(2)
-      : '';
-    const position = message.data.position
-      ? message.data.position.toFixed(2)
-      : '';
-    const volume = message.data.volume
-      ? message.data.volume.toFixed(2)
-      : '';
+    const duration = message.data.duration ? message.data.duration.toFixed(2) : '';
+    const speed = message.data.speed ? message.data.speed.toFixed(2) : '';
+    const position = message.data.position ? message.data.position.toFixed(2) : '';
+    const volume = message.data.volume ? message.data.volume.toFixed(2) : '';
 
-    document.getElementById(
-      'track-duration'
-    ).textContent = `Duration: ${duration}`;
-    document.getElementById(
-      'track-speed'
-    ).textContent = `Speed: ${speed}`;
-    document.getElementById(
-      'track-position'
-    ).textContent = `Position: ${position}`;
-    document.getElementById(
-      'track-volume'
-    ).textContent = `Volume: ${volume}`;
+    document.getElementById('track-duration').textContent = `Duration: ${duration}`;
+    document.getElementById('track-speed').textContent = `Speed: ${speed}`;
+    document.getElementById('track-position').textContent = `Position: ${position}`;
+    document.getElementById('track-volume').textContent = `Volume: ${volume}`;
 
     document.getElementById('track-info').style.display = 'block';
   }
@@ -178,6 +158,8 @@ function setEffects() {
 
   document.getElementById('effects-container').style.display = 'none';
 }
+
+
 
 function sendMessage(message) {
   console.log('Sending message:', message);
