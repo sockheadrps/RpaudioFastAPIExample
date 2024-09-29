@@ -88,12 +88,10 @@ input[type='number']:disabled {
   color: #15548b;
   touch-action: auto;
 }
-<<<<<<< Updated upstream
-=======
 
 
 
-.slider {
+#volume-slider {
   width: 150px;
   appearance: none;
   height: 5px;
@@ -103,11 +101,11 @@ input[type='number']:disabled {
   transition: opacity 0.2s ease;
 }
 
-.slider:hover {
+#volume-slider:hover {
   opacity: 1;
 }
 
-.slider::-webkit-slider-thumb {
+#volume-slider::-webkit-slider-thumb {
   appearance: none;
   width: 15px;
   height: 15px;
@@ -116,7 +114,7 @@ input[type='number']:disabled {
   border-radius: 50%;
 }
 
-.slider::-moz-range-thumb {
+#volume-slider::-moz-range-thumb {
   width: 15px;
   height: 15px;
   background: #4CAF50;
@@ -124,7 +122,6 @@ input[type='number']:disabled {
   border-radius: 50%;
 }
 
-.value {
+#volume-value {
   font-weight: bold;
 }
->>>>>>> Stashed changes
