@@ -88,3 +88,40 @@ input[type='number']:disabled {
   color: #15548b;
   touch-action: auto;
 }
+
+
+
+#volume-slider {
+  width: 150px;
+  appearance: none;
+  height: 5px;
+  background: #ddd;
+  outline: none;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+#volume-slider:hover {
+  opacity: 1;
+}
+
+#volume-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  background: #4c63af;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+#volume-slider::-moz-range-thumb {
+  width: 15px;
+  height: 15px;
+  background: #4CAF50;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+#volume-value {
+  font-weight: bold;
+}

@@ -25,31 +25,42 @@ socket.onmessage = function (event) {
   const message = JSON.parse(event.data);
 
   // Check if the message contains data with track information
-  // if (
-  //   message.data &&
-  //   message.data.title &&
-  //   message.data.artist &&
-  //   message.data.duration
-  // ) {
-  //   // Update the track info display
-  //   document.getElementById(
-  //     'track-title'
-  //   ).textContent = `Title: ${message.data.title}`;
-  //   document.getElementById(
-  //     'track-artist'
-  //   ).textContent = `Artist: ${message.data.artist}`;
-  //   document.getElementById(
-  //     'track-duration'
-  //   ).textContent = `Duration: ${message.data.duration}`;
-
-  //   // Show the track info section
-  //   document.getElementById('track-info').style.display = 'block';
-
-  //   // Hide the effects container if it's visible
-  //   document.getElementById('effects-container').style.display =
-  //     'none';
-  // }
+  if (
+    message.data &&
+    message.data.title &&
+    message.data.artist &&
+    message.data.duration
+  ) {
+    // Update the track info display
+    document.getElementById(
+      'track-title'
+    ).textContent = `Title: ${message.data.title}`;
+    document.getElementById(
+      'track-artist'
+    ).textContent = `Artist: ${message.data.artist}`;
+    document.getElementById(
+      'track-duration'
+    ).textContent = `Duration: ${message.data.duration}`;
+  
+    document.getElementById(
+      'track-speed'
+    ).textContent = `Speed: ${message.data.speed}`;
+    document.getElementById(
+      'track-position'
+    ).textContent = `Position: ${message.data.position}`;
+    document.getElementById(
+      'track-volume'
+    ).textContent = `Volume: ${message.data.volume}`;
+  
+    // Show the track info section
+    document.getElementById('track-info').style.display = 'block';
+  
+    // Hide the effects container if it's visible
+    document.getElementById('effects-container').style.display =
+      'none';
+  }
 };
+  
 
 function handleMessage(message) {
   // Process the valid JSON message here
@@ -168,8 +179,27 @@ function setEffects() {
       input.disabled = true;
     });
 
-  // Hide the effects container
   document.getElementById('effects-container').style.display = 'none';
+}
+
+document.getElementById('volume-slider').addEventListener('input', function () {
+  const volumeValue = parseFloat(this.value).toFixed(2); 
+  document.getElementById('volume-value').textContent = volumeValue; 
+
+  const volumeChangeEvent = {
+      event: 'audio_control',
+      data: {
+          type: "volume",
+          value: volumeValue
+      }
+  };
+
+  sendMessage(volumeChangeEvent); 
+});
+
+function sendMessage(message) {
+  console.log("Sending message:", message);
+  socket.send(JSON.stringify(message));
 }
 
 document

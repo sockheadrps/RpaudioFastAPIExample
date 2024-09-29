@@ -24,7 +24,7 @@ clients = []
 
 async def client_queue_processor():
     while True:
-        await asyncio.sleep(0.2)
+        await asyncio.sleep(0)
         if not client_queue.empty():
             audio_status = client_queue.get_nowait()
             data = {"data": audio_status}
@@ -58,27 +58,27 @@ async def audio_command_processor():
     await asyncio.sleep(0.5)
 
     while True:
+        while True:
+            await asyncio.sleep(0.0)
+            try:
+                command = await asyncio.wait_for(command_queue.get(), timeout=0.1)
+                print(f"Command received: {command}, {channel.current_audio}")
+                break
+            except asyncio.TimeoutError:
+                if channel.current_audio is not None:
+                    client_queue.put_nowait(channel.current_audio_data())
+                pass
 
-        await asyncio.sleep(0.4)
-
-        command = await command_queue.get()
+        # command = await command_queue.get()
         print(f"Processing command: {command}")
+        await asyncio.sleep(0.0)
 
         if command["type"] == "play":
-            while channel.current_audio is None:
-                await asyncio.sleep(0.1)
             channel.current_audio.play()
-            while not channel.current_audio.is_playing:
-                await asyncio.sleep(0.1)
             audio_status["is_playing"] = True
 
         elif command["type"] == "pause":
-            while channel.current_audio is None:
-                await asyncio.sleep(0.1)
-
             channel.current_audio.pause()
-            while channel.current_audio.is_playing:
-                await asyncio.sleep(0.1)
 
             audio_status["is_playing"] = False
 
@@ -95,6 +95,11 @@ async def audio_command_processor():
         elif command["type"] == "autoplay_on":
             print("Auto play command received.")
             channel.auto_consume = True
+
+        elif command["type"] == "set_volume":
+            volume = command["volume"]["value"]
+            print(f"Setting volume to: {volume}")
+            channel.current_audio.set_volume(float(volume))
 
         elif command["type"] == "set_effects":
 
@@ -132,21 +137,7 @@ async def audio_command_processor():
 
             if effects_list:
                 channel.set_effects_chain(effects_list)
-                await asyncio.sleep(0.3)
-
-        # await asyncio.sleep(0.3)
-        print(f"channel.current_audio: {channel.current_audio}")
-
-        if not command.get("effects"):
-            while channel.current_audio is None:
-                await asyncio.sleep(0.1)
-                print("Waiting for audio to load...")
-            audio_status["title"] = channel.current_audio.metadata['title']
-            audio_status["duration"] = channel.current_audio.metadata['duration']
-            audio_status["artist"] = channel.current_audio.metadata['artist']
-            print(f"Audio status: {audio_status}")
-            client_queue.put_nowait(audio_status)
-            client_queue.put_nowait(channel.current_audio_data())
+                await asyncio.sleep(0.0)
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -165,7 +156,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
     try:
         while True:
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.0)
             # Receive commands from the client
             data = await websocket.receive_text()
             print(f"Received data: {data}")
@@ -232,6 +223,16 @@ async def websocket_endpoint(websocket: WebSocket):
                     elif command == "autoplay_on":
                         command_queue.put_nowait({"type": "autoplay_on"})
                         await websocket.send_text("Auto play command queued.")
+                    elif event_type == "audio_control":  # Adjusted for volume control
+                        volume_data = data_json.get('data', {})
+                        volume_value = volume_data.get('value', None)
+
+                        if volume_value is not None:
+                            volume_value = float(volume_value)
+                            command_queue.put_nowait({
+                                "type": "set_volume",
+                                "volume": {"value": volume_value}
+                            })
 
                 # Broadcast updates or audio state to all connected clients
                 for client in clients:
