@@ -14,34 +14,47 @@ socket.onmessage = function (event) {
   console.log('Message from server: ' + event.data);
 
   // Parse the incoming JSON data
+  try {
+    const message = JSON.parse(event.data); // Attempt to parse JSON
+    // Handle the parsed message
+    handleMessage(message);
+} catch (error) {
+    console.error('Failed to parse JSON:', error);
+    // Optionally handle the error, e.g., show a notification
+}
   const message = JSON.parse(event.data);
 
   // Check if the message contains data with track information
-  if (
-    message.data &&
-    message.data.title &&
-    message.data.artist &&
-    message.data.duration
-  ) {
-    // Update the track info display
-    document.getElementById(
-      'track-title'
-    ).textContent = `Title: ${message.data.title}`;
-    document.getElementById(
-      'track-artist'
-    ).textContent = `Artist: ${message.data.artist}`;
-    document.getElementById(
-      'track-duration'
-    ).textContent = `Duration: ${message.data.duration}`;
+  // if (
+  //   message.data &&
+  //   message.data.title &&
+  //   message.data.artist &&
+  //   message.data.duration
+  // ) {
+  //   // Update the track info display
+  //   document.getElementById(
+  //     'track-title'
+  //   ).textContent = `Title: ${message.data.title}`;
+  //   document.getElementById(
+  //     'track-artist'
+  //   ).textContent = `Artist: ${message.data.artist}`;
+  //   document.getElementById(
+  //     'track-duration'
+  //   ).textContent = `Duration: ${message.data.duration}`;
 
-    // Show the track info section
-    document.getElementById('track-info').style.display = 'block';
+  //   // Show the track info section
+  //   document.getElementById('track-info').style.display = 'block';
 
-    // Hide the effects container if it's visible
-    document.getElementById('effects-container').style.display =
-      'none';
-  }
+  //   // Hide the effects container if it's visible
+  //   document.getElementById('effects-container').style.display =
+  //     'none';
+  // }
 };
+
+function handleMessage(message) {
+  // Process the valid JSON message here
+  console.log('Processing message:', message);
+}
 
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.lock-btn').forEach((button) => {

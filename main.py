@@ -75,7 +75,7 @@ async def audio_command_processor():
         elif command["type"] == "pause":
             while channel.current_audio is None:
                 await asyncio.sleep(0.1)
-            
+
             channel.current_audio.pause()
             while channel.current_audio.is_playing:
                 await asyncio.sleep(0.1)
@@ -130,13 +130,10 @@ async def audio_command_processor():
                     end_val=speed_value, duration=speed_duration, apply_after=speed_apply_after)
                 effects_list.append(speed_up)
 
-            # Apply effects only if any are present
             if effects_list:
                 channel.set_effects_chain(effects_list)
                 await asyncio.sleep(0.3)
 
-                print(
-                    f"Applied effects after: {[effect.apply_after for effect in effects_list]}")
         # await asyncio.sleep(0.3)
         print(f"channel.current_audio: {channel.current_audio}")
 
@@ -149,6 +146,7 @@ async def audio_command_processor():
             audio_status["artist"] = channel.current_audio.metadata['artist']
             print(f"Audio status: {audio_status}")
             client_queue.put_nowait(audio_status)
+            client_queue.put_nowait(channel.current_audio_data())
 
 
 @app.get("/", response_class=HTMLResponse)
