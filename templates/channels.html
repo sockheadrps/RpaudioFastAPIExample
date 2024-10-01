@@ -7,56 +7,115 @@
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <div id="player-container">
-        <h1>Server-Side AudioChannel</h1>
-        <div id="controls">
-            <button id="play-btn">Play</button>
-            <button id="pause-btn">Pause</button>
-            <button id="stop-btn">Stop</button>
-            <button id="autoplay-btn" data-autoplay="false">Autoplay: Off</button>
+    <h1>Server-Side AudioChannel</h1>
 
-        </div>
-        
+    <div id="player-container-wrapper">
+        <div id="player-container-1" class="player-container">
+            <h2>Channel 1</h2>
 
-        <div id="track-info" style="display: none;">
-            <h2 id="track-title"></h2>
-            <h3 id="track-artist"></h3>
-            <p id="track-duration"></p>
-            <p id="track-speed"></p>
-            <p id="track-position"></p>
-            <p id="track-volume"></p>
+            <div id="controls-1" class="controls">
+                <button id="play-btn-1">Play</button>
+                <button id="pause-btn-1">Pause</button>
+                <button id="stop-btn-1">Stop</button>
+                <button id="autoplay-btn-1" data-autoplay="false">Autoplay: Off</button>
+
+                
+            </div>
+                <label for="volume-slider-1">Volume:</label>
+                <input type="range" id="volume-slider-1" class="vol-slider" min="0" max="1.0" value="0.5" step="0.01">
+
+            <div id="track-info-1" class="track-info" style="display: none;">
+                <h3 id="track-title-1"></h3>
+                <h4 id="track-artist-1"></h4>
+                <p id="track-duration-1"></p>
+                <p id="track-speed-1"></p>
+                <p id="track-position-1"></p>
+                <p id="track-volume-1"></p>
+            </div>
+
+            <div id="effects-container-1" class="effects-container">
+                <div class="effect-item">
+                    <label for="fade-in-duration-1">Fade In:</label>
+                    <input type="number" id="fade-in-duration-1" placeholder="sec" min="0" value="3.0" step="1.0" class="effect-input input-1">
+                    <label for="fade-in-apply-after-1">Apply After:</label>
+                    <input type="number" id="fade-in-apply-after-1" placeholder="sec" min="0" value="0.0" step="1.0" class="effect-input input-1">
+                    <button class="lock-btn-1 isLocked" data-locked="true"></button>
+
+
+                </div>
+                <div class="effect-item">
+                    <label for="fade-out-duration-1">Fade Out:</label>
+                    <input type="number" id="fade-out-duration-1" placeholder="sec" min="0" value="3.0" step="1.0" class="effect-input input-1">
+                    <label for="fade-out-apply-after-1">Apply After:</label>
+                    <input type="number" id="fade-out-apply-after-1" placeholder="sec" min="0" value="8.0" step="1.0" class="effect-input input-1">
+                    <button class="lock-btn-1 isLocked" data-locked="true"></button>
+                </div>
+                <div class="effect-item">
+                    <label for="speed-1">Speed:</label>
+                    <input type="number" id="speed-1" placeholder="x" min="0" step="0.1" value="1.5" class="effect-input input-1">
+                    <label for="speed-duration-1">Duration:</label>
+                    <input type="number" id="speed-duration-1" placeholder="sec" min="0" step="1.0" value="4.0" class="effect-input input-1">
+                    <label for="speed-apply-after-1">Apply After:</label>
+                    <input type="number" id="speed-apply-after-1" placeholder="sec" min="0" value="3.0" step="1.0" class="effect-input input-1">
+                    <button class="lock-btn-1 isLocked" data-locked="true"></button>
+                </div>
+                <button id="set-effects-btn-1">Set Effects</button>
+            </div>
         </div>
 
-        <div id="effects-container">
-            <div class="effect-item">
-                <label for="fade-in-duration">Fade In:</label>
-                <input type="number" id="fade-in-duration" placeholder="sec" min="0" value="3.0" step="1.0" class="effect-input">
-                <label for="fade-in-apply-after">Apply After:</label>
-                <input type="number" id="fade-in-apply-after" placeholder="sec" min="0" value="0.0" step="1.0" class="effect-input">
-                <button class="lock-btn isLocked" data-locked="true"></button>
+        <!-- Channel 2 Section -->
+        <div id="player-container-2" class="player-container">
+            <h2>Channel 2</h2>
+
+            <div id="controls-2" class="controls">
+                <button id="play-btn-2">Play</button>
+                <button id="pause-btn-2">Pause</button>
+                <button id="stop-btn-2">Stop</button>
+                <button id="autoplay-btn-2" data-autoplay="false">Autoplay: Off</button>
+
+                
             </div>
-            <div class="effect-item">
-                <label for="fade-out-duration">Fade Out:</label>
-                <input type="number" id="fade-out-duration" placeholder="sec" min="0" value="3.0" step="1.0" class="effect-input">
-                <label for="fade-out-apply-after">Apply After:</label>
-                <input type="number" id="fade-out-apply-after" placeholder="sec" min="0" value="8.0" step="1.0" class="effect-input">
-                <button class="lock-btn isLocked" data-locked="true"></button>
+                <label for="volume-slider-2">Volume:</label>
+                <input type="range" id="volume-slider-2" class="vol-slider" min="0" max="1.0" value="0.5" step="0.01">
+
+            <div id="track-info-2" class="track-info" style="display: none;">
+                <h3 id="track-title-2"></h3>
+                <h4 id="track-artist-2"></h4>
+                <p id="track-duration-2"></p>
+                <p id="track-speed-2"></p>
+                <p id="track-position-2"></p>
+                <p id="track-volume-2"></p>
             </div>
-            <div class="effect-item">
-                <label for="speed">Speed:</label>
-                <input type="number" id="speed" placeholder="x" min="0" step="0.1" value="1.5" class="effect-input">
-                <label for="speed-duration">Duration:</label>
-                <input type="number" id="speed-duration" placeholder="sec" min="0" step="1.0" value="4.0" class="effect-input">
-                <label for="speed-apply-after">Apply After:</label>
-                <input type="number" id="speed-apply-after" placeholder="sec" min="0" value="3.0" step="1.0" class="effect-input">
-                <button class="lock-btn isLocked" data-locked="true"></button>
+
+            <div id="effects-container-2" class="effects-container">
+                <div class="effect-item">
+                    <label for="fade-in-duration-2">Fade In:</label>
+                    <input type="number" id="fade-in-duration-2" placeholder="sec" min="0" value="3.0" step="1.0" class="effect-input input-2">
+                    <label for="fade-in-apply-after-2">Apply After:</label>
+                    <input type="number" id="fade-in-apply-after-2" placeholder="sec" min="0" value="0.0" step="1.0" class="effect-input input-2">
+                    <button class="lock-btn-2 isLocked" data-locked="true"></button>
+                </div>
+                <div class="effect-item">
+                    <label for="fade-out-duration-2">Fade Out:</label>
+                    <input type="number" id="fade-out-duration-2" placeholder="sec" min="0" value="3.0" step="1.0" class="effect-input input-2">
+                    <label for="fade-out-apply-after-2">Apply After:</label>
+                    <input type="number" id="fade-out-apply-after-2" placeholder="sec" min="0" value="8.0" step="1.0" class="effect-input input-2">
+                    <button class="lock-btn-2 isLocked" data-locked="true"></button>
+                </div>
+                <div class="effect-item">
+                    <label for="speed-2">Speed:</label>
+                    <input type="number" id="speed-2" placeholder="x" min="0" step="0.1" value="1.5" class="effect-input input-2">
+                    <label for="speed-duration-2">Duration:</label>
+                    <input type="number" id="speed-duration-2" placeholder="sec" min="0" step="1.0" value="4.0" class="effect-input input-2">
+                    <label for="speed-apply-after-2">Apply After:</label>
+                    <input type="number" id="speed-apply-after-2" placeholder="sec" min="0" value="3.0" step="1.0" class="effect-input input-2">
+                    <button class="lock-btn-2 isLocked" data-locked="true"></button>
+                </div>
+                <button id="set-effects-btn-2">Set Effects</button>
             </div>
-            
-            <button id="set-effects-btn">Set Effects</button>
         </div>
-        
-        
     </div>
     <script src="/static/channels.js"></script>
+
 </body>
 </html>

@@ -66,7 +66,7 @@ function handleMessage(message) {
 
 document
   .getElementById('volume-slider')
-  .addEventListener('input', function () {
+  .addEventListener('mouseup', function () {
     const volumeValue = parseFloat(this.value).toFixed(2);
     document.getElementById('volume-value').textContent = volumeValue;
 
@@ -83,7 +83,7 @@ document
 
 document
   .getElementById('speed-slider')
-  .addEventListener('mouseup', function () {
+  .addEventListener('input', function () {
     const speedValue = parseFloat(this.value).toFixed(2);
     document.getElementById('speed-value').textContent = speedValue;
 

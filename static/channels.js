@@ -27,53 +27,118 @@ socket.onmessage = function (event) {
 function handleMessage(message) {
   console.log('Processing message:', message);
 
-  if (message.data && message.data.title) {
-    document.getElementById('track-title').textContent = `Title: ${message.data.title}`;
-    document.getElementById('track-artist').textContent = `Artist: ${message.data.artist}`;
-    
-    // Limit to 2 decimals using toFixed()
-    const duration = message.data.duration ? message.data.duration.toFixed(2) : '';
-    const speed = message.data.speed ? message.data.speed.toFixed(2) : '';
-    const position = message.data.position ? message.data.position.toFixed(2) : '';
-    const volume = message.data.volume ? message.data.volume.toFixed(2) : '';
+  // Ensure message contains data for a specific channel
+  if (message.data) {
+    for (const channel in message.data) {
+      const channelData = message.data[channel];
 
-    document.getElementById('track-duration').textContent = `Duration: ${duration}`;
-    document.getElementById('track-speed').textContent = `Speed: ${speed}`;
-    document.getElementById('track-position').textContent = `Position: ${position}`;
-    document.getElementById('track-volume').textContent = `Volume: ${volume}`;
+      // Retrieve the corresponding track info div for this channel
+      const trackInfoDiv = document.getElementById(
+        `track-info-${channel}`
+      );
+      const trackTitle = document.getElementById(
+        `track-title-${channel}`
+      );
+      const trackArtist = document.getElementById(
+        `track-artist-${channel}`
+      );
+      const trackDuration = document.getElementById(
+        `track-duration-${channel}`
+      );
+      const trackSpeed = document.getElementById(
+        `track-speed-${channel}`
+      );
+      const trackPosition = document.getElementById(
+        `track-position-${channel}`
+      );
+      const trackVolume = document.getElementById(
+        `track-volume-${channel}`
+      );
 
-    document.getElementById('track-info').style.display = 'block';
+      // Update the track title and artist
+      if (channelData.data) {
+        const data = channelData.data;
+
+        trackTitle.textContent = data.title
+          ? `Title: ${data.title}`
+          : '';
+        trackArtist.textContent = data.artist
+          ? `Artist: ${data.artist}`
+          : '';
+
+        // Update duration, speed, position, and volume
+        trackDuration.textContent = `Duration: ${
+          data.duration ? data.duration.toFixed(2) : ''
+        }`;
+        trackSpeed.textContent = `Speed: ${
+          data.speed ? data.speed.toFixed(2) : ''
+        }`;
+        trackPosition.textContent = `Position: ${
+          data.position ? data.position.toFixed(2) : ''
+        }`;
+        trackVolume.textContent = `Volume: ${
+          data.volume ? data.volume.toFixed(2) : ''
+        }`;
+
+        // Show track info if the channel is playing
+        trackInfoDiv.style.display = "block";
+      } else {
+        // Handle case where data is null for this channel
+        trackTitle.textContent = '';
+        trackArtist.textContent = '';
+        trackDuration.textContent = 'Duration: ';
+        trackSpeed.textContent = 'Speed: ';
+        trackPosition.textContent = 'Position: ';
+        trackVolume.textContent = 'Volume: ';
+        // trackInfoDiv.style.display = 'none'; // Hide if no data
+      }
+    }
   }
 }
-document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('.lock-btn').forEach((button) => {
-    button.textContent = '🔓';
-    button.dataset.locked = 'false';
-  });
 
-  const inputs = document.querySelectorAll('input');
-  inputs.forEach((input) => {
-    input.disabled = false;
-    input.style.opacity = '1';
-  });
+document.addEventListener('DOMContentLoaded', () => {
+  // Initialize all lock buttons and inputs for both channels
+  for (let channel = 1; channel <= 2; channel++) {
+    const lockButtons = document.querySelectorAll(
+      `.lock-btn-${channel}`
+    );
+    lockButtons.forEach((button) => {
+      button.textContent = '🔓'; // Set initial unlocked state
+      button.dataset.locked = 'false';
+      button.addEventListener('click', toggleLock);
+      button.addEventListener('touchend', (event) => {
+        event.preventDefault();
+        toggleLock.call(button);
+      });
+    });
+
+    // Enable all input fields related to this channel
+    const inputs = document.querySelectorAll(`.input-${channel}`);
+    inputs.forEach((input) => {
+      input.disabled = false;
+      input.style.opacity = '1';
+    });
+  }
 });
 
+// Object to hold lock states for each effect
 const effectLocks = {
-  fadeIn: true,
-  fadeOut: true,
-  speed: true,
+  'fade-in-duration-1': true,
+  'fade-out-duration-1': true,
+  'speed-1': true,
+  'fade-in-duration-2': true,
+  'fade-out-duration-2': true,
+  'speed-2': true,
 };
 
-document.querySelectorAll('.lock-btn').forEach((button) => {
-  button.addEventListener('click', toggleLock);
-  button.addEventListener('touchend', (event) => {
-    event.preventDefault();
-    toggleLock.call(button);
-  });
-});
-
+// Toggle lock function
 function toggleLock() {
-  const inputs = this.parentElement.querySelectorAll('input');
+  const channel = this.classList.contains('lock-btn-1') ? '1' : '2';
+  console.log('Toggling lock for channel', channel);
+  const inputs = this.parentElement.querySelectorAll(
+    `.input-${channel}`
+  );
+  console.log('Inputs:', inputs);
   const isLocked = this.dataset.locked === 'true';
 
   if (isLocked) {
@@ -99,24 +164,30 @@ function toggleLock() {
   }
 }
 
-function setEffects() {
-  const fadeInInput = document.getElementById('fade-in-duration');
+function setEffects(channel) {
+  const fadeInInput = document.getElementById(
+    `fade-in-duration-${channel}`
+  );
   const fadeInApplyAfterInput = document.getElementById(
-    'fade-in-apply-after'
+    `fade-in-apply-after-${channel}`
   );
-  const fadeOutInput = document.getElementById('fade-out-duration');
+  const fadeOutInput = document.getElementById(
+    `fade-out-duration-${channel}`
+  );
   const fadeOutApplyAfterInput = document.getElementById(
-    'fade-out-apply-after'
+    `fade-out-apply-after-${channel}`
   );
-  const speedInput = document.getElementById('speed');
-  const speedDurationInput =
-    document.getElementById('speed-duration');
+  const speedInput = document.getElementById(`speed-${channel}`);
+  const speedDurationInput = document.getElementById(
+    `speed-duration-${channel}`
+  );
   const speedApplyAfterInput = document.getElementById(
-    'speed-apply-after'
+    `speed-apply-after-${channel}`
   );
 
   const effectsData = {
     event: 'effects',
+    channel: channel,
     data: {},
   };
 
@@ -151,104 +222,151 @@ function setEffects() {
   }
 
   document
-    .querySelectorAll('#effects-container input')
+    .querySelectorAll(`#effects-container-${channel} input`)
     .forEach((input) => {
       input.disabled = true;
     });
 
-  document.getElementById('effects-container').style.display = 'none';
+  document.getElementById(
+    `effects-container-${channel}`
+  ).style.display = 'none';
 }
 
-
-
-function sendMessage(message) {
-  console.log('Sending message:', message);
-  socket.send(JSON.stringify(message));
-}
+// function sendMessage(message) {
+//   console.log('Sending message:', message);
+//   socket.send(JSON.stringify(message));
+// }
 
 document
-  .getElementById('set-effects-btn')
-  .addEventListener('click', setEffects);
+  .getElementById('set-effects-btn-1')
+  .addEventListener('click', () => setEffects(1));
 document
-  .getElementById('set-effects-btn')
+  .getElementById('set-effects-btn-1')
   .addEventListener('touchend', (event) => {
     event.preventDefault();
-    setEffects();
+    setEffects(1);
   });
 
-document.getElementById('pause-btn').addEventListener('click', () => {
-  const pauseData = {
-    event: 'audio_control',
-    data: 'pause',
-  };
-  socket.send(JSON.stringify(pauseData));
-});
 document
-  .getElementById('pause-btn')
-  .addEventListener('touchstart', (event) => {
+  .getElementById('set-effects-btn-2')
+  .addEventListener('click', () => setEffects(2));
+document
+  .getElementById('set-effects-btn-2')
+  .addEventListener('touchend', (event) => {
     event.preventDefault();
-    const pauseData = {
-      event: 'audio_control',
-      data: 'pause',
-    };
-    socket.send(JSON.stringify(pauseData));
+    setEffects(2);
   });
 
-document.getElementById('play-btn').addEventListener('click', () => {
-  const playData = {
+// Function to send audio control commands for a specific channel
+function sendAudioControl(channel, action) {
+  const controlData = {
     event: 'audio_control',
-    data: 'play',
+    channel: channel,
+    data: action,
   };
-  socket.send(JSON.stringify(playData));
-});
-document
-  .getElementById('play-btn')
-  .addEventListener('touchstart', (event) => {
-    event.preventDefault();
-    const playData = {
-      event: 'audio_control',
-      data: 'play',
-    };
-    socket.send(JSON.stringify(playData));
-  });
+  socket.send(JSON.stringify(controlData));
+}
 
-document.getElementById('stop-btn').addEventListener('click', () => {
-  const stopData = {
+// Play button event listeners for each channel
+for (let channel = 1; channel <= 2; channel++) {
+  document
+    .getElementById(`play-btn-${channel}`)
+    .addEventListener('click', () => {
+      sendAudioControl(channel, 'play');
+    });
+
+  document
+    .getElementById(`play-btn-${channel}`)
+    .addEventListener('touchstart', (event) => {
+      event.preventDefault();
+      sendAudioControl(channel, 'play');
+    });
+}
+
+// Pause button event listeners for each channel
+for (let channel = 1; channel <= 2; channel++) {
+  document
+    .getElementById(`pause-btn-${channel}`)
+    .addEventListener('click', () => {
+      sendAudioControl(channel, 'pause');
+    });
+
+  document
+    .getElementById(`pause-btn-${channel}`)
+    .addEventListener('touchstart', (event) => {
+      event.preventDefault();
+      sendAudioControl(channel, 'pause');
+    });
+}
+
+// Stop button event listeners for each channel
+for (let channel = 1; channel <= 2; channel++) {
+  document
+    .getElementById(`stop-btn-${channel}`)
+    .addEventListener('click', () => {
+      sendAudioControl(channel, 'stop');
+    });
+
+  document
+    .getElementById(`stop-btn-${channel}`)
+    .addEventListener('touchstart', (event) => {
+      event.preventDefault();
+      sendAudioControl(channel, 'stop');
+    });
+}
+function toggleAutoplay(channel) {
+  const autoplayBtn = document.getElementById(
+    `autoplay-btn-${channel}`
+  );
+  const isAutoplay = autoplayBtn.dataset.autoplay === 'true';
+
+  autoplayBtn.dataset.autoplay = !isAutoplay;
+  const newAutoplayState = !isAutoplay;
+
+  autoplayBtn.textContent = newAutoplayState
+    ? 'Autoplay: On'
+    : 'Autoplay: Off';
+
+  const autoplayData = {
     event: 'audio_control',
-    data: 'stop',
+    channel: channel,
+    data: newAutoplayState ? 'autoplay_on' : 'autoplay_off',
   };
-  socket.send(JSON.stringify(stopData));
-});
-document
-  .getElementById('stop-btn')
-  .addEventListener('touchstart', (event) => {
-    event.preventDefault();
-    const stopData = {
-      event: 'audio_control',
-      data: 'stop',
-    };
-    socket.send(JSON.stringify(stopData));
+
+  socket.send(JSON.stringify(autoplayData));
+}
+
+for (let channel = 1; channel <= 2; channel++) {
+  document
+    .getElementById(`autoplay-btn-${channel}`)
+    .addEventListener('click', () => {
+      toggleAutoplay(channel);
+    });
+}
+
+// Volume slider event listeners for each channel
+for (let channel = 1; channel <= 2; channel++) {
+  const volumeSlider = document.getElementById(
+    `volume-slider-${channel}`
+  );
+  volumeSlider.addEventListener('mouseup', () => {
+    const volume = volumeSlider.value; // Get the current volume value
+    sendVolumeControl(channel, volume); // Send volume control data
+    document.getElementById(
+      `track-volume-${channel}`
+    ).textContent = `Volume: ${volume}`;
   });
+}
 
-let isAutoplay = false;
-
-document
-  .getElementById('autoplay-btn')
-  .addEventListener('click', () => {
-    isAutoplay = !isAutoplay;
-
-    const autoplayBtn = document.getElementById('autoplay-btn');
-    if (isAutoplay) {
-      autoplayBtn.textContent = 'Autoplay: On';
-      autoplayBtn.dataset.autoplay = 'true';
-    } else {
-      autoplayBtn.textContent = 'Autoplay: Off';
-      autoplayBtn.dataset.autoplay = 'false';
-    }
-
-    const autoplayData = {
-      event: 'audio_control',
-      data: isAutoplay ? 'autoplay_on' : 'autoplay_off',
-    };
-    socket.send(JSON.stringify(autoplayData));
-  });
+// Function to send volume control commands for a specific channel
+function sendVolumeControl(channel, volume) {
+  const volumeData = {
+    event: 'audio_control',
+    channel: channel,
+    data: {
+      type: 'volume',
+      value: volume,
+    },
+  };
+  socket.send(JSON.stringify(volumeData));
+}

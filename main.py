@@ -47,17 +47,40 @@ async def audio_command_processor(endpoint):
             callback=on_audio_stop).load_audio(AUDIO_FILE)
 
     elif endpoint == "/audio_channels":
-        AUDIO_FILE = r"C:\Users\16145\Desktop\a1.mp3"
+        AUDIO_FILE = r"C:\Users\16145\Desktop\exc.mp3"
         AUDIO_FILE_2 = r"C:\Users\16145\Desktop\a2.mp3"
+        AUDIO_FILE_3 = r"C:\Users\16145\Desktop\04.mp3"
+
         audio_1 = rpaudio.AudioSink(
             callback=on_audio_stop).load_audio(AUDIO_FILE)
         audio_2 = rpaudio.AudioSink(
             callback=on_audio_stop).load_audio(AUDIO_FILE_2)
-        channel = AudioChannel()
-        channel.push(audio_1)
-        channel.push(audio_2)
+        channel_l = AudioChannel()
+        channel_l.push(audio_1)
+        channel_l.push(audio_2)
+
+        audio_3 = rpaudio.AudioSink(
+            callback=on_audio_stop).load_audio(AUDIO_FILE_3)
+        audio_4 = rpaudio.AudioSink(
+            callback=on_audio_stop).load_audio(AUDIO_FILE_2)
+        channel_2 = AudioChannel()
+        channel_2.push(audio_3)
+        channel_2.push(audio_4)
+
+        channels = {
+            "1": channel_l,
+            "2": channel_2
+        }
 
     audio_status = {
+        "1": {
+            "is_playing": False,
+            "data": None
+        },
+        "2": {
+            "is_playing": False,
+            "data": None
+        },
         "is_playing": False,
         "title": None,
         "artist": None,
@@ -70,7 +93,9 @@ async def audio_command_processor(endpoint):
 
         try:
             command = await asyncio.wait_for(command_queue.get(), timeout=0.2)
-            print(f"Received command: {command}")
+            if endpoint == "/audio_channels":
+                target_channel = str(command['channel'])
+                channel = channels.get(target_channel)
 
             if command["type"] == "play":
                 if endpoint == "/audio_sink":
@@ -78,10 +103,10 @@ async def audio_command_processor(endpoint):
                         audio.play()
                         audio_status["is_playing"] = True
                 elif endpoint == "/audio_channels":
-                    if not audio_status["is_playing"]:
+                    if not audio_status[target_channel]["is_playing"]:
                         if channel.current_audio:
                             channel.current_audio.play()
-                            audio_status["is_playing"] = True
+                            audio_status[target_channel]["is_playing"] = True
                         else:
                             print("No current audio to play.")
 
@@ -91,10 +116,10 @@ async def audio_command_processor(endpoint):
                         audio.pause()
                         audio_status["is_playing"] = False
                 elif endpoint == "/audio_channels":
-                    if audio_status["is_playing"]:
+                    if audio_status[target_channel]["is_playing"]:
                         if channel.current_audio:
                             channel.current_audio.pause()
-                            audio_status["is_playing"] = False
+                            audio_status[target_channel]["is_playing"] = False
 
             elif command["type"] == "stop":
                 if endpoint == "/audio_sink":
@@ -102,12 +127,12 @@ async def audio_command_processor(endpoint):
                     audio_status["is_playing"] = False
                 elif endpoint == "/audio_channels":
                     channel.current_audio.stop()
-                    audio_status["is_playing"] = False
+                    audio_status[target_channel]["is_playing"] = False
 
             elif command["type"] == "autoplay_on":
                 if endpoint == "/audio_channels":
                     channel.auto_consume = True
-                    audio_status["is_playing"] = True
+                    audio_status[target_channel]["is_playing"] = True
 
             elif command["type"] == "set_volume":
                 volume = command["volume"]["value"]
@@ -163,28 +188,26 @@ async def audio_command_processor(endpoint):
                 else:
                     print("No audio metadata available.")
             elif endpoint == "/audio_channels":
-                if channel is not None and channel.current_audio is not None:
-                    await client_queue.put(channel.current_audio_data())
-                else:
-                    pass
-
-        if command:
-            print(f"Command processed: {command}")
-            client_queue.put_nowait(audio_status)
-            command = None
+                for chan_id, chan in enumerate(channels):
+                    target_channel_id = str(chan_id + 1)
+                    if channels[target_channel_id] is not None and channels[target_channel_id].current_audio is not None:
+                        audio_status[target_channel_id]['data'] = channels[chan].current_audio_data(
+                        )
+                        # print(f"Audio status: {audio_status[target_channel_id]['data']}")
+                        await client_queue.put(audio_status)
 
 
-@app.get("/audio_channels", response_class=HTMLResponse)
+@ app.get("/audio_channels", response_class=HTMLResponse)
 async def get_audio_player():
     return HTMLResponse(content=open("templates/channels.html").read())
 
 
-@app.get("/audio_sink", response_class=HTMLResponse)
+@ app.get("/audio_sink", response_class=HTMLResponse)
 async def get_audio_player():
     return HTMLResponse(content=open("templates/sink.html").read())
 
 
-@app.websocket("/ws/audio")
+@ app.websocket("/ws/audio")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     clients.append(websocket)
@@ -216,11 +239,11 @@ async def websocket_endpoint(websocket: WebSocket):
                     continue
 
                 event_type = data_json.get('event')
+                channel = data_json.get('channel')
                 endpoint = data_json.get('data')
 
                 if event_type == "effects":
                     effects_data = data_json.get('data', {})
-
                     effects = {}
 
                     if 'fadeInDuration' in effects_data or 'fadeInApplyAfter' in effects_data:
@@ -244,6 +267,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
                     if effects:
                         command_queue.put_nowait({
+                            "channel": channel,
                             "type": "set_effects",
                             "effects": effects
                         })
@@ -251,19 +275,23 @@ async def websocket_endpoint(websocket: WebSocket):
                 elif event_type == "audio_control":
                     command = data_json.get('data')
                     if command == "play":
-                        command_queue.put_nowait({"type": "play"})
+                        command_queue.put_nowait(
+                            {"channel": channel, "type": "play"})
                         await websocket.send_text("Play command queued.")
 
                     elif command == "pause":
-                        command_queue.put_nowait({"type": "pause"})
+                        command_queue.put_nowait(
+                            {"channel": channel, "type": "pause"})
                         await websocket.send_text("Pause command queued.")
 
                     elif command == "stop":
-                        command_queue.put_nowait({"type": "stop"})
+                        command_queue.put_nowait(
+                            {"channel": channel, "type": "stop"})
                         await websocket.send_text("Stop command queued.")
 
                     elif command == "autoplay_on":
-                        command_queue.put_nowait({"type": "autoplay_on"})
+                        command_queue.put_nowait(
+                            {"channel": channel, "type": "autoplay_on"})
                         await websocket.send_text("Auto play command queued.")
 
                     elif event_type == "audio_control":
@@ -273,6 +301,7 @@ async def websocket_endpoint(websocket: WebSocket):
                         if data_type == "volume":
                             volume = data['value']
                             command_queue.put_nowait({
+                                "channel": channel,
                                 "type": "set_volume",
                                 "volume": {"value": volume}
                             })
@@ -280,6 +309,7 @@ async def websocket_endpoint(websocket: WebSocket):
                         elif data_type == "speed":
                             speed = data['value']
                             command_queue.put_nowait({
+                                "channel": channel,
                                 "type": "speed",
                                 "speed": {"value": speed}
                             })
@@ -292,7 +322,7 @@ async def websocket_endpoint(websocket: WebSocket):
         audio_processor_task.cancel()
         client_processor_task.cancel()
         clients.remove(websocket)
-    
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
