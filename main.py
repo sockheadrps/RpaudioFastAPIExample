@@ -30,7 +30,7 @@ async def client_queue_processor():
 
 
 def on_audio_stop():
-    command_queue.put_nowait({"type": "complete"})
+    print("Audio stopped.")
 
 
 async def audio_command_processor(endpoint):
@@ -49,7 +49,7 @@ async def audio_command_processor(endpoint):
     elif endpoint == "/audio_channels":
         AUDIO_FILE = r"C:\Users\16145\Desktop\exc.mp3"
         AUDIO_FILE_2 = r"C:\Users\16145\Desktop\a2.mp3"
-        AUDIO_FILE_3 = r"C:\Users\16145\Desktop\04.mp3"
+        AUDIO_FILE_3 = r"C:\Users\16145\Desktop\Acrylic.mp3"
 
         audio_1 = rpaudio.AudioSink(
             callback=on_audio_stop).load_audio(AUDIO_FILE)
@@ -126,8 +126,8 @@ async def audio_command_processor(endpoint):
                     audio.stop()
                     audio_status["is_playing"] = False
                 elif endpoint == "/audio_channels":
-                    channel.current_audio.stop()
-                    audio_status[target_channel]["is_playing"] = False
+                    if channel.current_audio:
+                        channel.current_audio.stop()
 
             elif command["type"] == "autoplay_on":
                 if endpoint == "/audio_channels":
